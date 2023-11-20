@@ -1,9 +1,8 @@
 const puppeteer = require("puppeteer")
 const fs = require("node:fs")
 
-// Check for paramters.
-
 async function main(query) {
+    // Set-up.
     const browser = await puppeteer.launch({ headless: false })
     const page = await browser.newPage()
 
@@ -17,53 +16,93 @@ async function main(query) {
         el.click()
     })
 
-    console.log("Clicked")
     await page.waitForNavigation()
-    console.log("Navigated")
-    await page.waitForSelector("div.thumbnail.borderless.d-flex.flex-column")
-    console.log("Waited for Selector")
 
-    await page.evaluate(() => {
-        (async () => {
-            let scroll = 0;
-            do {
-                scroll = window.scrollY;
-                window.scrollBy(0, window.innerHeight)
-                await new Promise((res, _) => {
-                    setTimeout(res, 500)
-                })
-            } while (window.scrollY > scroll)
-        })()
-    })
+    const next_button = await page.$("li.pagination-next.ng-scope")
 
-    await new Promise((res, _) => {
-        setTimeout(res, 8000)
-    }) 
+    let disabled = false;
+    let round = 0;
 
+    do {
 
-    const items = await page.$$eval("a.photo.has-photo", (els) => {
-        return els.map((el) => el.style['background-image'])
-    })
+        console.log("Round: ", round)
 
-    console.log(items)
-    console.log(items.length)
+        if (next_button) {
+            const classNameString = await page.$eval("li.pagination-next.ng-scope", (it) => {
+                return it.className
+            })
 
-    const urls = items.map(it => extractUrl(it, '"'))
-    console.log(urls)
+            disabled = classNameString.includes("disabled")
 
-    fs.open("out.csv", "w", (err, fd) => {
-        fs.appendFile(fd, Buffer.from(urls.toString()), (err) => {
-            if(err) throw err;
-            console.log("Finished")
+            console.log("Disabled: ", disabled)
+        }
+
+        await page.evaluate(() => {
+            return (async () => {
+                let scroll = 0;
+                do {
+                    scroll = window.scrollY;
+                    window.scrollBy(0, window.innerHeight)
+                    await new Promise((res, _) => {
+                        setTimeout(res, 500)
+                    })
+                } while (window.scrollY > scroll)
+            })()
         })
-    })
 
-    console.log("Finished")
+        await new Promise((res, _) => {
+            setTimeout(res, 8000)
+        })
 
+        const items = await page.$$eval("a.photo.has-photo", (els) => {
+            return els.map((el) => el.style['background-image'])
+        })
+
+        console.log(items)
+        console.log(items.length)
+
+        const urls = items.map(it => extractUrl(it, '"'))
+        console.log(urls)
+
+        fs.open("out.csv", "a", (err, fd) => {
+            if (err) throw err;
+            fs.appendFile(fd, Buffer.from(urls.toString()), (err) => {
+                if (err) throw err;
+                console.log("Finished Saving to File")
+            })
+        })
+
+        console.log("Finished")
+
+        if (next_button && !disabled) {
+            console.log("Entered if")
+            const el = await page.$('a[ng-click="selectPage(page + 1, $event)"]')
+            if(!el){
+                console.log("Element somehow is null")
+                disabled = true
+            } else{
+                console.log("Element not null")
+                console.log("Gonna click element")
+                await page.evaluate(() => {
+                    const item = document.querySelector('a[ng-click="selectPage(page + 1, $event)"]')
+                    item.click()
+                })
+                console.log("Element clicked")
+                await page.waitForSelector("li.pagination-next.ng-scope")
+                console.log("Navigation finished")
+            }
+        }
+
+        round++;
+
+    }
+    while (next_button && !disabled);
+
+    console.log("Finished the whole ass script")
 }
 
 main("Lion")
 
-function extractUrl(str, delimeter){
+function extractUrl(str, delimeter) {
     return str.slice(str.indexOf(delimeter) + delimeter.length, str.lastIndexOf(delimeter))
 }
