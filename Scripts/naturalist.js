@@ -36,22 +36,20 @@ async function main(query) {
 
             console.log("Disabled: ", disabled)
         }
-
         await page.evaluate(() => {
-            return (async () => {
-                let scroll = 0;
-                do {
-                    scroll = window.scrollY;
-                    window.scrollBy(0, window.innerHeight)
-                    await new Promise((res, _) => {
-                        setTimeout(res, 500)
-                    })
-                } while (window.scrollY > scroll)
-            })()
-        })
-
-        await new Promise((res, _) => {
-            setTimeout(res, 8000)
+            return new Promise((res, rej) => {
+                (async () => {
+                    let scroll = 0;
+                    do {
+                        scroll = window.scrollY;
+                        window.scrollBy(0, window.innerHeight)
+                        await new Promise((res, _) => {
+                            setTimeout(res, 500)
+                        })
+                    } while (window.scrollY > scroll)
+                    res()
+                })()
+            })
         })
 
         const items = await page.$$eval("a.photo.has-photo", (els) => {
@@ -77,10 +75,10 @@ async function main(query) {
         if (next_button && !disabled) {
             console.log("Entered if")
             const el = await page.$('a[ng-click="selectPage(page + 1, $event)"]')
-            if(!el){
+            if (!el) {
                 console.log("Element somehow is null")
                 disabled = true
-            } else{
+            } else {
                 console.log("Element not null")
                 console.log("Gonna click element")
                 await page.evaluate(() => {
