@@ -1,5 +1,4 @@
 const fs = require("node:fs")
-const path = require("node:path")
 
 fs.readFile("./out.csv", (err, data) => {
     if (err) throw err;

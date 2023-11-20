@@ -36,6 +36,7 @@ async function main(query) {
 
             console.log("Disabled: ", disabled)
         }
+
         await page.evaluate(() => {
             return new Promise((res, rej) => {
                 (async () => {
@@ -44,13 +45,14 @@ async function main(query) {
                         scroll = window.scrollY;
                         window.scrollBy(0, window.innerHeight)
                         await new Promise((res, _) => {
-                            setTimeout(res, 500)
+                            setTimeout(res, 1000)
                         })
                     } while (window.scrollY > scroll)
                     res()
                 })()
             })
         })
+        console.log("Finished Scrolling")
 
         const items = await page.$$eval("a.photo.has-photo", (els) => {
             return els.map((el) => el.style['background-image'])
