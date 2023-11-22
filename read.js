@@ -1,6 +1,6 @@
 const fs = require("node:fs")
 
-fs.readFile("./out.csv", (err, data) => {
+fs.readFile("./Script/out.csv", (err, data) => {
     if (err) throw err;
     const urls = data.toString().split(",");
     console.log(urls)
@@ -9,6 +9,7 @@ fs.readFile("./out.csv", (err, data) => {
             .then(res => res.blob())
             .then(blob => blob.arrayBuffer())
             .then(abuff => Buffer.from(abuff))
-            .then(buff => fs.createWriteStream(`Lions/img_${i + 1}${path.extname(urls[i])}`).write(buff))
+        // Check if file has been created.
+            .then(buff => fs.createWriteStream(`Lions/img_${i + 1}.jpg`).write(buff))
     }
 })
