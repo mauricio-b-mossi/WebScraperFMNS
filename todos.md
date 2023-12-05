@@ -18,3 +18,10 @@
 1. Pipe `child-process` to different
 scripts. There will be no problem
 since each script writes to only one file.
+
+2023-12-05
+- Need to finish implementing Butterfiles of America and Naturalist.
+- Build correct `package.json` to first `npm run fetch` and `npm run download`.
+
+- `os.EOF` gives EOF symbol for file.
+- stream input form input file.
