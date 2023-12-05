@@ -1,7 +1,7 @@
 const fs = require("node:fs")
 
 if (process.argv.length < 4) {
-    console.log("Missing Arguments: \n1. Provide Input File Path.\n2. Provide Output Directory. 3. Provide time buffer in ms between fetch requests. Default is 0ms.")
+    throw new Error("Missing Arguments: \n1. Provide Input File Path.\n2. Provide Output Directory.\n3. Provide time buffer in ms between fetch requests. Default is 100ms.")
 }
 
 // Check how many files are currenly on the dir.
@@ -12,7 +12,7 @@ async function main() {
     let loadedFile;
     const FILE_PATH = process.argv[2]
     const DIRECTORY_PATH = process.argv[3]
-    const TIME_BUFFER_MS = (process.argv.length == 5) ? Number(process.argv[4]) : 0;
+    const TIME_BUFFER_MS = (process.argv.length == 5) ? Number(process.argv[4]) : 100;
 
     try {
         loadedFile = await fs.promises.readFile(FILE_PATH);

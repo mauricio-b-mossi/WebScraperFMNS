@@ -1,9 +1,22 @@
 const puppeteer = require("puppeteer")
 const fs = require("node:fs")
 
-async function main(query) {
+if (process.argv.length < 4) {
+    throw new Error("Missing Arguments: \n1. Provide Query.\n2. Provide Output File.")
+}
+
+const QUERY_STRING = process.argv[2];
+const OUTPUT_FILE = process.argv[3];
+
+
+if (process.argv.at(process.argv.length - 1) == "-d") {
+    DEBUG = true;
+}
+
+// Set flags.
+async function main(query, outputFile, headless) {
     // Set-up.
-    const browser = await puppeteer.launch({ headless: false })
+    const browser = await puppeteer.launch({ headless: headless })
     const page = await browser.newPage()
 
     await page.goto("https://www.inaturalist.org/")
@@ -22,23 +35,12 @@ async function main(query) {
 
     let disabled = false;
     let round = 0;
+    let count = 0;
 
     do {
 
-        console.log("Round: ", round)
-
-        if (next_button) {
-            const classNameString = await page.$eval("li.pagination-next.ng-scope", (it) => {
-                return it.className
-            })
-
-            disabled = classNameString.includes("disabled")
-
-            console.log("Disabled: ", disabled)
-        }
-
         await page.evaluate(() => {
-            return new Promise((res, rej) => {
+            return new Promise((res, _) => {
                 (async () => {
                     let scroll = 0;
                     do {
@@ -52,19 +54,26 @@ async function main(query) {
                 })()
             })
         })
-        console.log("Finished Scrolling")
+
+        let classNameString;
+        if (next_button) {
+            classNameString = await page.$eval("li.pagination-next.ng-scope", (it) => {
+                return it.className
+            })
+        }
+
+        disabled = classNameString.includes("disabled")
 
         const items = await page.$$eval("a.photo.has-photo", (els) => {
             return els.map((el) => el.style['background-image'])
         })
 
-        console.log(items)
-        console.log(items.length)
+        // Extracting url and switching size to large.
+        const urls = items.map(it => extractUrl(it, '"').replace(/(?<=\/)(medium|small)(?=\.)/, "large"));
 
-        const urls = items.map(it => extractUrl(it, '"'))
-        console.log(urls)
+        count += urls.length;
 
-        fs.open("out.csv", "a", (err, fd) => {
+        fs.open(outputFile, "a", (err, fd) => {
             if (err) throw err;
             fs.appendFile(fd, Buffer.from(urls.toString()), (err) => {
                 if (err) throw err;
@@ -72,24 +81,16 @@ async function main(query) {
             })
         })
 
-        console.log("Finished")
-
         if (next_button && !disabled) {
-            console.log("Entered if")
             const el = await page.$('a[ng-click="selectPage(page + 1, $event)"]')
             if (!el) {
-                console.log("Element somehow is null")
                 disabled = true
             } else {
-                console.log("Element not null")
-                console.log("Gonna click element")
                 await page.evaluate(() => {
                     const item = document.querySelector('a[ng-click="selectPage(page + 1, $event)"]')
                     item.click()
                 })
-                console.log("Element clicked")
                 await page.waitForSelector("li.pagination-next.ng-scope")
-                console.log("Navigation finished")
             }
         }
 
@@ -98,10 +99,11 @@ async function main(query) {
     }
     while (next_button && !disabled);
 
-    console.log("Finished the whole ass script")
+    console.log("FINISHED EXECUTION OF NATURALIST SCRIPT.\n\nRetrieved: ", imgUrls.length, " urls.")
+
 }
 
-main("Lion")
+main(QUERY_STRING, OUTPUT_FILE, DEBUG)
 
 function extractUrl(str, delimeter) {
     return str.slice(str.indexOf(delimeter) + delimeter.length, str.lastIndexOf(delimeter))

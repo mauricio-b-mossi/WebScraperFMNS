@@ -3,7 +3,23 @@ const fs = require("node:fs/promises");
 
 const link_attr = "data-cturl"
 
-async function main(query, headless) {
+
+if (process.argv.length < 4) {
+    throw new Error("Missing Arguments: \n1. Provide Query.\n2. Provide Output File.")
+}
+
+const QUERY_STRING = process.argv[2];
+const OUTPUT_FILE = process.argv[3];
+
+
+let DEBUG = false;
+
+if (process.argv.at(process.argv.length - 1) == "-d") {
+    DEBUG = true;
+}
+
+
+async function main(query, outputFile, headless) {
 
     const browser = await puppeteer.launch({ headless: headless })
     const page = await browser.newPage()
@@ -13,7 +29,7 @@ async function main(query, headless) {
     await page.waitForSelector("input.gsc-input")
 
     await page.type("input.gsc-input", query)
-
+,
     await page.click("button.gsc-search-button.gsc-search-button-v2")
 
     await page.waitForSelector("a.gs-title")
@@ -42,8 +58,6 @@ async function main(query, headless) {
 
     await page.waitForSelector("a.y > img");
 
-    console.log("Finished waiting")
-
     // Constains the paths to all the image files.
     const paths = await page.$$eval("a.y", (els) => {
         return els.map(el => el.getAttribute("href"))
@@ -66,11 +80,11 @@ async function main(query, headless) {
         await page.goBack();
     }
 
-    let fileDescriptor = await fs.open("out.csv", "w");
+    let fileDescriptor = await fs.open(outputFile, "w");
     await fs.appendFile(fileDescriptor, imgUrls.toString())
 
-    // Make loop to navigate to path -> get url -> save to file -> go to main file.
+    console.log("FINISHED EXECUTION OF BUTTERFLIES OF AMERICA SCRIPT.\n\nRetrieved: ", imgUrls.length, " urls.")
 
 };
 
-main("Phocides pigmalion Mangrove Skipper", false);
+main(QUERY_STRING, OUTPUT_FILE, DEBUG).catch(console.err);
