@@ -54,7 +54,7 @@ async function main() {
                 .then(res => res.blob())
                 .then(blob => blob.arrayBuffer())
                 .then(abuff => Buffer.from(abuff))
-                .then(buff => fs.createWriteStream(`${DIRECTORY_PATH}/img_${i + 1}.jpg`).write(buff))
+                .then(buff => fs.createWriteStream(`${DIRECTORY_PATH}/img_${i + 1}.jpg`).write(buff)).catch(err => console.log("Request Failed: \n", err))
         }
     } catch (err) {
         console.log("\n\nFetches Sent: ", i);
@@ -62,7 +62,7 @@ async function main() {
         throw (err);
     }
 
-    console.log("PROGRAM FINISHED DOWNLOADING IMAGES TO ", DIRECTORY_PATH);
+    console.log(`PROGRAM FINISHED DOWNLOADING IMAGES TO ${DIRECTORY_PATH}`);
 
 }
 
