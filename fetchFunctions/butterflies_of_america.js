@@ -1,7 +1,6 @@
 const puppeteer = require("puppeteer");
 const fs = require("node:fs/promises");
 
-
 module.exports = async function main(query, outputFile, headless) {
 
     const link_attr = "data-cturl"
@@ -49,7 +48,6 @@ module.exports = async function main(query, outputFile, headless) {
     })
 
 
-    console.log(paths.length)
 
     const currUrl = page.url()
 
@@ -65,6 +63,7 @@ module.exports = async function main(query, outputFile, headless) {
         await page.goBack();
     }
 
+    // need to make file before opening.
     let fileDescriptor = await fs.open(outputFile, "w");
     await fs.appendFile(fileDescriptor, imgUrls.toString())
 

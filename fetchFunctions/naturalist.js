@@ -51,7 +51,7 @@ module.exports = async function main(query, outputFile, headless) {
             })
         }
 
-        disabled = classNameString.includes("disabled")
+        disabled = classNameString.includes("disabled");
 
         const items = await page.$$eval("a.photo.has-photo", (els) => {
             return els.map((el) => el.style['background-image'])

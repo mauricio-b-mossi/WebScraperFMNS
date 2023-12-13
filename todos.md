@@ -25,3 +25,7 @@ since each script writes to only one file.
 
 - `os.EOF` gives EOF symbol for file.
 - stream input form input file.
+
+2023-12-06
+- Build error checking and logging, if not found log to file and return. Avoid crashes.
+- Figure out `Promise issue`.

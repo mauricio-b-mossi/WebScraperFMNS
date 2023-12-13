@@ -28,7 +28,6 @@ async function main() {
             throw err;
         }
         const dir = await fs.promises.mkdir(DIRECTORY_PATH, { recursive: true })
-        dir.normalize;
     }
 
     // Have a working Directory and loadedFile.
